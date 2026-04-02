@@ -6,10 +6,13 @@
     <title>Wedding Gram</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Кнопки админа скрыты по умолчанию */
         .admin-btn { display: none !important; }
         body.is-admin .admin-btn { display: flex !important; }
+        
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         body { -webkit-tap-highlight-color: transparent; }
+        
         .like-pop { animation: like-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes like-pop {
             0% { transform: scale(1); }
@@ -22,21 +25,22 @@
 
     <header class="bg-white border-b border-stone-200 px-4 py-3 sticky top-0 z-40 flex items-center justify-between">
         <div class="w-10"></div>
-        <h1 class="text-xl font-bold tracking-tight text-stone-800" onclick="tryAdmin()">Никита + Анастасия</h1>
+        <h1 class="text-xl font-bold tracking-tight text-stone-800 cursor-pointer" onclick="tryAdmin()">Никита + Анастасия</h1>
         <div class="w-10 flex justify-end">
             <div id="online-indicator" class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
         </div>
     </header>
 
     <main class="flex-grow overflow-y-auto">
-        <div id="status" class="text-[10px] text-stone-400 py-2 tracking-[3px] opacity-0 text-center uppercase font-bold">Загрузка...</div>
-        <div id="gallery" class="grid grid-cols-3 gap-0.5 border-t border-stone-200"></div>
+        <div id="status" class="text-[10px] text-stone-400 py-2 tracking-[3px] opacity-0 text-center uppercase font-bold transition-opacity">Загрузка...</div>
+        <div id="gallery" class="grid grid-cols-3 gap-0.5 border-t border-stone-200">
+            </div>
     </main>
 
     <footer class="bg-white border-t border-stone-200 p-2 pb-8 z-40 flex justify-around items-center">
         <label class="flex flex-col items-center gap-1 cursor-pointer p-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            <span class="text-[10px] font-medium uppercase text-stone-500">Альбом</span>
+            <span class="text-[10px] font-medium uppercase text-stone-500">Галерея</span>
             <input type="file" id="upload-gallery" class="hidden" accept="image/*">
         </label>
 
@@ -52,12 +56,15 @@
     </footer>
 
     <div id="photo-viewer" class="fixed inset-0 bg-black z-[100] hidden flex flex-col" onclick="closePhoto()">
-        <header class="p-4 flex items-center gap-3">
-             <div class="w-8 h-8 rounded-full bg-stone-700 flex items-center justify-center text-[10px] font-bold text-white uppercase" id="viewer-avatar">?</div>
-             <span class="font-bold text-sm text-white" id="viewer-name">Автор</span>
+        <header class="p-4 flex items-center justify-between">
+             <div class="flex items-center gap-3">
+                 <div class="w-8 h-8 rounded-full bg-stone-700 flex items-center justify-center text-[10px] font-bold text-white uppercase" id="viewer-avatar">?</div>
+                 <span class="font-bold text-sm text-white" id="viewer-name">Автор</span>
+             </div>
+             <button id="admin-delete-fullscreen" class="admin-btn bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold uppercase" onclick="event.stopPropagation()">Удалить</button>
         </header>
         <div class="flex-grow flex items-center justify-center p-2">
-            <img id="full-photo" src="" class="max-w-full max-h-[70vh] shadow-2xl" onclick="event.stopPropagation()">
+            <img id="full-photo" src="" class="max-w-full max-h-[60vh] shadow-2xl" onclick="event.stopPropagation()">
         </div>
         <footer class="p-6 bg-black" onclick="event.stopPropagation()">
             <div class="flex items-center gap-4 mb-2">
@@ -70,8 +77,8 @@
     </div>
 
     <div id="name-modal" class="fixed inset-0 bg-white z-50 hidden p-10 flex flex-col items-center justify-center text-center">
-        <h2 class="text-3xl font-bold mb-2">Wedding Gram</h2>
-        <input type="text" id="user-name-input" class="w-full max-w-xs p-4 rounded-xl bg-stone-100 border border-stone-200 mb-4 outline-none focus:ring-2 ring-stone-900 text-center" placeholder="Ваше имя">
+        <h2 class="text-2xl font-bold mb-6 tracking-tight">Добро пожаловать в Wedding Gram!</h2>
+        <input type="text" id="user-name-input" class="w-full max-w-xs p-4 rounded-xl bg-stone-100 border border-stone-200 mb-4 outline-none focus:ring-2 ring-stone-900 text-center" placeholder="Как вас зовут?">
         <button onclick="saveName()" class="w-full max-w-xs bg-stone-900 text-white font-bold py-4 rounded-xl active:scale-95 transition-all">Войти</button>
     </div>
 
@@ -99,17 +106,30 @@
             const viewer = document.getElementById('photo-viewer');
             document.getElementById('full-photo').src = url;
             document.getElementById('viewer-name').innerText = author;
-            document.getElementById('viewer-avatar').innerText = author[0];
+            document.getElementById('viewer-avatar').innerText = author ? author[0] : '?';
             document.getElementById('likes-count-main').innerText = likes.length;
+            
             const heart = document.getElementById('heart-icon-main');
             const isLiked = likes.includes(userId);
             heart.setAttribute('fill', isLiked ? '#ef4444' : 'none');
             heart.setAttribute('stroke', isLiked ? '#ef4444' : 'white');
+
             document.getElementById('like-btn-main').onclick = () => toggleLike(id, likes);
+            
+            // Кнопка удаления в полноэкранном режиме
+            document.getElementById('admin-delete-fullscreen').onclick = (e) => {
+                e.stopPropagation();
+                removePhoto(id);
+            };
+
             viewer.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         };
 
-        window.closePhoto = () => document.getElementById('photo-viewer').classList.add('hidden');
+        window.closePhoto = () => {
+            document.getElementById('photo-viewer').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
 
         window.toggleLike = async (id, likes) => {
             const photoRef = doc(db, "photos", id);
@@ -117,6 +137,13 @@
                 await updateDoc(photoRef, { likes: arrayRemove(userId) });
             } else {
                 await updateDoc(photoRef, { likes: arrayUnion(userId) });
+            }
+        };
+
+        window.removePhoto = async (id) => {
+            if (confirm("Вы уверены, что хотите удалить это фото навсегда?")) {
+                await deleteDoc(doc(db, "photos", id));
+                closePhoto();
             }
         };
 
@@ -132,8 +159,15 @@
         };
 
         window.tryAdmin = () => {
-            if (["Никита", "Анастасия"].includes(localStorage.getItem('wedding_user_name'))) {
-                if (prompt("Пароль:") === "1234") document.body.classList.toggle('is-admin');
+            const admins = ["Никита", "Анастасия", "Макар", "Admin"];
+            const current = localStorage.getItem('wedding_user_name');
+            if (admins.includes(current)) {
+                if (prompt("Введите пароль администратора:") === "1234") {
+                    document.body.classList.toggle('is-admin');
+                    alert("Режим администратора изменен!");
+                }
+            } else {
+                alert("У вас нет прав доступа к этой функции.");
             }
         };
 
@@ -141,13 +175,15 @@
         onSnapshot(q, (snapshot) => {
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = '';
-            snapshot.forEach((doc) => {
-                const data = doc.data();
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
                 const likes = data.likes || [];
+                const id = docSnap.id;
+                
                 gallery.innerHTML += `
-                    <div class="relative aspect-square overflow-hidden bg-stone-100 border-white border" onclick="openPhoto('${doc.id}', '${data.url}', '${data.author}', ${JSON.stringify(likes)})">
+                    <div class="relative aspect-square overflow-hidden bg-stone-100 border-white border-[0.5px]" onclick="openPhoto('${id}', '${data.url}', '${data.author}', ${JSON.stringify(likes)})">
                         <img src="${data.url}" class="w-full h-full object-cover">
-                        <button onclick="event.stopPropagation(); deleteDoc(doc(window.db, 'photos', '${doc.id}'))" class="admin-btn absolute top-1 right-1 bg-red-600 text-white p-1 rounded text-[8px]">УДАЛИТЬ</button>
+                        <button onclick="event.stopPropagation(); removePhoto('${id}')" class="admin-btn absolute top-1 right-1 bg-red-600/80 text-white px-1.5 py-0.5 rounded text-[8px] font-bold">X</button>
                     </div>`;
             });
         });
@@ -155,7 +191,8 @@
         const handleUpload = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            document.getElementById('status').style.opacity = '1';
+            const status = document.getElementById('status');
+            status.style.opacity = '1';
             const formData = new FormData();
             formData.append('image', file);
             try {
@@ -168,9 +205,9 @@
                         author: localStorage.getItem('wedding_user_name') || "Гость",
                         likes: [] 
                     });
-                    document.getElementById('status').style.opacity = '0';
+                    status.style.opacity = '0';
                 }
-            } catch (err) { alert("Ошибка загрузки"); }
+            } catch (err) { alert("Ошибка загрузки. Попробуйте еще раз."); status.style.opacity = '0'; }
         };
 
         document.getElementById('upload-camera').addEventListener('change', handleUpload);
