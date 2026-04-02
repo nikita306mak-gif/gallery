@@ -14,7 +14,6 @@
             0% { box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.4); }
             100% { box-shadow: 0 0 0 20px rgba(245, 158, 11, 0); }
         }
-        /* Анимация появления фото */
         .zoom-in { animation: zoom-in 0.3s ease-out; }
         @keyframes zoom-in {
             from { transform: scale(0.8); opacity: 0; }
@@ -28,11 +27,17 @@
         <h1 class="text-3xl font-extrabold mb-2 text-amber-400 uppercase tracking-widest drop-shadow-md" onclick="tryAdmin()">Наша Свадьба</h1>
         <p id="welcome-user" class="text-slate-400 mb-8 text-sm italic font-light">Запечатлите лучшие моменты!</p>
 
-        <div class="relative inline-block mb-10">
-            <label class="pulse bg-amber-500 hover:bg-amber-600 text-slate-950 px-10 py-5 rounded-2xl font-black cursor-pointer inline-flex items-center gap-3 transition-all shadow-2xl active:scale-95 uppercase">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Добавить фото
-                <input type="file" id="upload" class="hidden" accept="image/*">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
+            <label class="pulse bg-amber-500 hover:bg-amber-600 text-slate-950 px-6 py-4 rounded-2xl font-black cursor-pointer inline-flex items-center gap-2 transition-all shadow-2xl active:scale-95 uppercase text-sm w-full sm:w-auto justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Камера
+                <input type="file" id="upload-camera" class="hidden" accept="image/*" capture="camera">
+            </label>
+
+            <label class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-4 rounded-2xl font-black cursor-pointer inline-flex items-center gap-2 transition-all shadow-xl active:scale-95 uppercase text-sm w-full sm:w-auto justify-center border border-slate-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Галерея
+                <input type="file" id="upload-gallery" class="hidden" accept="image/*">
             </label>
         </div>
 
@@ -49,7 +54,7 @@
 
     <div id="name-modal" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center z-50 hidden p-6 backdrop-blur-sm">
         <div class="bg-slate-900 p-8 rounded-3xl w-full max-w-xs text-center border border-amber-500/20 shadow-2xl">
-            <h2 class="text-2xl font-black mb-6 text-white uppercase font-sans text-center">Как вас зовут?</h2>
+            <h2 class="text-2xl font-black mb-6 text-white uppercase text-center font-sans">Как вас зовут?</h2>
             <input type="text" id="user-name-input" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 text-white mb-4 outline-none focus:border-amber-500 text-center text-lg" placeholder="Ваше имя...">
             <button onclick="saveName()" class="w-full bg-amber-500 text-slate-950 font-black py-4 rounded-xl hover:bg-amber-400 transition-all shadow-lg active:scale-95 uppercase">Начать</button>
         </div>
@@ -72,13 +77,12 @@
         const db = getFirestore(app);
         window.db = db;
 
-        // Функции для просмотра фото
         window.openPhoto = (url) => {
             const viewer = document.getElementById('photo-viewer');
             const fullPhoto = document.getElementById('full-photo');
             fullPhoto.src = url;
             viewer.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Запрет прокрутки под фото
+            document.body.style.overflow = 'hidden';
         };
 
         window.closePhoto = () => {
@@ -108,17 +112,17 @@
             const currentName = localStorage.getItem('wedding_user_name');
             const allowedAdmins = ["Макар", "Никита", "Admin"]; 
             if (allowedAdmins.includes(currentName)) {
-                const pass = prompt("Введите пароль:");
+                const pass = prompt("Пароль:");
                 if (pass === "1234") {
                     document.body.classList.toggle('is-admin');
-                    alert("Режим управления активен!");
+                    alert("Управление активно");
                 }
             }
         };
 
         window.removePhoto = async (id, event) => {
             event.stopPropagation();
-            if (confirm("Удалить фото навсегда?")) {
+            if (confirm("Удалить фото?")) {
                 await deleteDoc(doc(window.db, "photos", id));
             }
         };
@@ -130,7 +134,7 @@
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 gallery.innerHTML += `
-                    <div class="relative bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700 aspect-square group" onclick="openPhoto('${data.url}')">
+                    <div class="relative bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700 aspect-square" onclick="openPhoto('${data.url}')">
                         <img src="${data.url}" class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-500">
                         <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900/90 to-transparent flex justify-between items-end click-through">
                             <span class="text-amber-400 text-[10px] font-black truncate drop-shadow-lg uppercase">${data.author || 'Гость'}</span>
@@ -142,7 +146,8 @@
             });
         });
 
-        document.getElementById('upload').addEventListener('change', async (e) => {
+        // Функция обработки загрузки
+        const handleUpload = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             document.getElementById('status').innerText = "Загрузка...";
@@ -156,7 +161,10 @@
                     document.getElementById('status').innerText = "Связь установлена";
                 }
             } catch (err) { document.getElementById('status').innerText = "Ошибка"; }
-        });
+        };
+
+        document.getElementById('upload-camera').addEventListener('change', handleUpload);
+        document.getElementById('upload-gallery').addEventListener('change', handleUpload);
     </script>
 </body>
 </html>
