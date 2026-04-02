@@ -1,15 +1,16 @@
 {
   "short_name": "WeddingGram",
-  "name": "Wedding Gallery: Nikita & Anastasia",
+  "name": "Wedding Gram: Nikita & Anastasia",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1077/1077035.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff"
 }
