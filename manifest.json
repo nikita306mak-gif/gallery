@@ -1,16 +1,21 @@
 {
-  "short_name": "WeddingGram",
-  "name": "Wedding Gram: Nikita & Anastasia",
+  "short_name": "Gallery",
+  "name": "My GIF Gallery",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1077/1077035.png",
+      "src": "icon-192.png",
       "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any maskable"
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/gallery/",
+  "background_color": "#000000",
   "display": "standalone",
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff"
+  "scope": "/gallery/",
+  "theme_color": "#000000"
 }
