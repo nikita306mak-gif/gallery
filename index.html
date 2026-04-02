@@ -6,9 +6,9 @@
     <title>Wedding Live Gallery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .admin-btn { display: none; }
-        body.is-admin .admin-btn { display: block; }
-        /* Анимация пульсации для кнопки камеры */
+        .admin-btn { display: none !important; }
+        body.is-admin .admin-btn { display: flex !important; }
+        .click-through { pointer-events: none; }
         .pulse { animation: pulse-animation 2s infinite; }
         @keyframes pulse-animation {
             0% { box-shadow: 0 0 0 0px rgba(245, 158, 11, 0.4); }
@@ -19,34 +19,24 @@
 <body class="bg-[#0f172a] text-white p-5 pb-24">
 
     <div class="max-w-md mx-auto text-center">
-        <h1 class="text-3xl font-extrabold mb-2 text-amber-400 uppercase tracking-widest drop-shadow-md" onclick="checkAdmin()">Наша Свадьба</h1>
-        <p id="welcome-user" class="text-slate-400 mb-8 text-sm italic font-light">Запечатлите лучшие моменты!</p>
+        <h1 class="text-3xl font-extrabold mb-2 text-amber-400 uppercase tracking-widest drop-shadow-md" onclick="tryAdmin()">Наша Свадьба</h1>
+        <p id="welcome-user" class="text-slate-400 mb-8 text-sm italic font-light font-sans">Запечатлите лучшие моменты!</p>
 
         <div class="relative inline-block mb-10">
             <label class="pulse bg-amber-500 hover:bg-amber-600 text-slate-950 px-10 py-5 rounded-2xl font-black cursor-pointer inline-flex items-center gap-3 transition-all shadow-2xl active:scale-95 uppercase">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="Store.08 9.08l-.83 1.66a1 1 0 01-.89.55H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2h-3.11a1 1 0 01-.89-.55l-.83-1.66a1 1 0 00-.89-.55H9.11a1 1 0 00-.89.55z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Сделать фото
-                <input type="file" id="upload" class="hidden" accept="image/*" capture="camera">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Добавить фото
+                <input type="file" id="upload" class="hidden" accept="image/*">
             </label>
         </div>
 
-        <div id="status" class="text-[10px] text-slate-500 mb-8 uppercase tracking-[3px] opacity-50 font-bold text-center">Связь установлена</div>
-
+        <div id="status" class="text-[10px] text-slate-500 mb-8 uppercase tracking-[3px] opacity-50 font-bold text-center italic font-sans">Связь установлена</div>
         <div id="gallery" class="grid grid-cols-2 gap-3 md:gap-4"></div>
     </div>
 
     <div id="name-modal" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center z-50 hidden p-6 backdrop-blur-sm">
         <div class="bg-slate-900 p-8 rounded-3xl w-full max-w-xs text-center border border-amber-500/20 shadow-2xl">
-            <div class="w-16 h-16 bg-amber-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-            </div>
-            <h2 class="text-2xl font-black mb-2 text-white">Привет!</h2>
-            <p class="text-slate-400 text-sm mb-6">Как тебя зовут?</p>
+            <h2 class="text-2xl font-black mb-6 text-white font-sans uppercase">Как вас зовут?</h2>
             <input type="text" id="user-name-input" class="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 text-white mb-4 outline-none focus:border-amber-500 text-center text-lg" placeholder="Ваше имя...">
             <button onclick="saveName()" class="w-full bg-amber-500 text-slate-950 font-black py-4 rounded-xl hover:bg-amber-400 transition-all shadow-lg active:scale-95 uppercase">Начать</button>
         </div>
@@ -67,10 +57,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
         window.db = db;
 
-        // 1. Имя
         window.userName = localStorage.getItem('wedding_user_name');
         if (!window.userName) {
             document.getElementById('name-modal').classList.remove('hidden');
@@ -84,26 +72,29 @@
                 localStorage.setItem('wedding_user_name', val);
                 window.userName = val;
                 document.getElementById('name-modal').classList.add('hidden');
-                document.getElementById('welcome-user').innerText = `Рады видеть тебя, ${window.userName}! ✨`;
+                location.reload();
             }
         };
 
-        // 2. Админка
-        window.checkAdmin = () => {
-            const pass = prompt("Код доступа:");
-            if (pass === "1234") {
-                document.body.classList.toggle('is-admin');
-                alert("Панель управления активна");
+        window.tryAdmin = () => {
+            const currentName = localStorage.getItem('wedding_user_name');
+            const allowedAdmins = ["Макар", "Никита", "Admin"]; 
+            if (allowedAdmins.includes(currentName)) {
+                const pass = prompt("Введите пароль:");
+                if (pass === "1234") {
+                    document.body.classList.toggle('is-admin');
+                    alert("Режим управления активен!");
+                }
             }
         };
 
-        window.removePhoto = async (id) => {
-            if (confirm("Удалить фото?")) {
+        window.removePhoto = async (id, event) => {
+            event.stopPropagation();
+            if (confirm("Удалить фото навсегда?")) {
                 await deleteDoc(doc(window.db, "photos", id));
             }
         };
 
-        // 3. Обновление галереи
         const q = query(collection(db, "photos"), orderBy("time", "desc"));
         onSnapshot(q, (snapshot) => {
             const gallery = document.getElementById('gallery');
@@ -111,49 +102,32 @@
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 gallery.innerHTML += `
-                    <div class="relative bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700 animate-in fade-in zoom-in duration-500">
-                        <img src="${data.url}" class="w-full aspect-square object-cover">
-                        <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900/90 to-transparent flex justify-between items-end">
-                            <span class="text-amber-400 text-[11px] font-black truncate drop-shadow-lg">${data.author || 'Гость'}</span>
-                            <button onclick="removePhoto('${doc.id}')" class="admin-btn bg-red-600 text-white p-1.5 rounded-lg shadow-lg active:scale-75">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
+                    <div class="relative bg-slate-800 rounded-2xl overflow-hidden shadow-2xl border border-slate-700" onclick="window.open('${data.url}', '_blank')">
+                        <img src="${data.url}" class="w-full aspect-square object-cover cursor-pointer hover:scale-105 transition-transform duration-300">
+                        <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-slate-900/90 to-transparent flex justify-between items-end click-through">
+                            <span class="text-amber-400 text-[10px] font-black truncate drop-shadow-lg uppercase">${data.author || 'Гость'}</span>
                         </div>
+                        <button onclick="removePhoto('${doc.id}', event)" class="admin-btn absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full shadow-lg active:scale-75 z-20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
                     </div>`;
             });
         });
 
-        // 4. Загрузка
         document.getElementById('upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
-            const status = document.getElementById('status');
-            status.innerText = "Отправляем в галерею...";
-            
+            document.getElementById('status').innerText = "Загрузка...";
             const formData = new FormData();
             formData.append('image', file);
-
             try {
-                const res = await fetch('https://api.imgbb.com/1/upload?key=5075a2f2bf9edb2a94bc4dd69e8e025e', {
-                    method: 'POST',
-                    body: formData
-                });
+                const res = await fetch('https://api.imgbb.com/1/upload?key=5075a2f2bf9edb2a94bc4dd69e8e025e', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    await addDoc(collection(db, "photos"), {
-                        url: data.data.url,
-                        time: Date.now(),
-                        author: window.userName || "Аноним"
-                    });
-                    status.innerText = "Успешно!";
-                    setTimeout(() => status.innerText = "Связь установлена", 3000);
+                    await addDoc(collection(db, "photos"), { url: data.data.url, time: Date.now(), author: window.userName || "Аноним" });
+                    document.getElementById('status').innerText = "Связь установлена";
                 }
-            } catch (err) {
-                status.innerText = "Ошибка сети";
-            }
+            } catch (err) { document.getElementById('status').innerText = "Ошибка"; }
         });
     </script>
 </body>
