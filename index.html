@@ -1,74 +1,100 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wedding Gallery</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], calligraphy: ['Great Vibes', 'cursive'] } } }
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBbnhk5_ueRGpVizQ7z0PC82UONcOWNCWc",
+        authDomain: "wedding-global-gallery-b7876.firebaseapp.com",
+        projectId: "wedding-global-gallery-b7876",
+        storageBucket: "wedding-global-gallery-b7876.firebasestorage.app",
+        messagingSenderId: "591994059288",
+        appId: "1:591994059288:web:e7db71815514a96b7de16d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Функция сохранения имени
+    window.saveName = () => {
+        const input = document.getElementById('user-name-input');
+        const val = input.value.trim();
+        if (val.length > 1) {
+            localStorage.setItem('wedding_user', val);
+            document.getElementById('name-modal').classList.add('hidden');
+            load();
+        } else {
+            alert("Пожалуйста, введите ваше имя");
         }
-    </script>
-    <style>
-        .admin-btn { display: none !important; }
-        body.is-admin .admin-btn { display: flex !important; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; background-color: #fcfcfc; }
-        .gallery-container { padding-bottom: 120px; }
-        img { pointer-events: none; -webkit-user-drag: none; }
-        * { -webkit-touch-callout: none; -webkit-user-select: none; }
-    </style>
-</head>
-<body class="h-screen flex flex-col font-sans">
+    };
 
-    <header class="bg-white/90 backdrop-blur-md border-b border-stone-200 px-5 py-6 sticky top-0 z-40 flex items-center justify-center shadow-sm">
-        <h1 class="text-3xl font-calligraphy text-stone-800 cursor-pointer" onclick="tryAdmin()">Никита + Анастасия</h1>
-    </header>
+    const load = () => {
+        const gallery = document.getElementById('gallery');
+        const q = query(collection(db, "photos"), orderBy("time", "desc"));
 
-    <main class="flex-grow overflow-y-auto gallery-container">
-        <div id="status-bar" class="text-[10px] text-stone-500 py-2 tracking-[3px] opacity-0 text-center uppercase font-bold transition-opacity">Загрузка...</div>
-        <div id="gallery" class="grid grid-cols-3 gap-0.5 p-0.5"></div>
-        <div id="empty-msg" class="hidden flex flex-col items-center justify-center p-20 text-stone-400 text-center italic">Здесь пока пусто...</div>
-    </main>
+        onSnapshot(q, (snap) => {
+            gallery.innerHTML = '';
+            document.getElementById('empty-msg').classList.toggle('hidden', !snap.empty);
+            snap.forEach(d => {
+                const data = d.data();
+                gallery.innerHTML += `
+                    <div class="relative bg-white p-1" onclick="openPhoto('${d.id}', '${data.url}', '${data.author}')">
+                        <div class="aspect-square overflow-hidden bg-stone-100">
+                            <img src="${data.url}" class="w-full h-full object-cover">
+                        </div>
+                        <p class="text-[11px] text-center font-calligraphy py-1.5 text-stone-500 truncate">${data.author || "Гость"}</p>
+                    </div>`;
+            });
+        });
+    };
 
-    <footer class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg px-2 pb-10 pt-4 z-40 flex justify-center items-center">
-        <label class="bg-stone-900 text-white p-6 rounded-full shadow-2xl active:scale-95 transition-transform cursor-pointer border-[6px] border-white">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4" /></svg>
-            <input type="file" id="upload-input" class="hidden" accept="image/*">
-        </label>
-    </footer>
+    // Загрузка фото
+    document.getElementById('upload-input').addEventListener('change', async (e) => {
+        const user = localStorage.getItem('wedding_user');
+        if (!user) {
+            document.getElementById('name-modal').classList.remove('hidden');
+            return;
+        }
 
-    <div id="photo-viewer" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col" onclick="closePhoto()">
-        <header class="p-5 flex items-center justify-between text-white">
-             <span class="font-bold text-sm" id="viewer-name">Автор</span>
-             <button id="admin-delete-btn" class="admin-btn bg-red-600 px-4 py-2 rounded-full text-[10px] font-black uppercase">Удалить</button>
-        </header>
-        <div class="flex-grow flex items-center justify-center p-4">
-            <img id="full-photo" src="" class="max-w-full max-h-[80vh] rounded shadow-2xl">
-        </div>
-    </div>
+        const file = e.target.files[0];
+        if (!file) return;
 
-    <div id="name-modal" class="fixed inset-0 bg-white z-[200] hidden p-10 flex flex-col items-center justify-center text-center">
-        <h2 class="text-5xl font-calligraphy text-stone-800 mb-8">Wedding Gram</h2>
-        <input type="text" id="user-name-input" class="w-full max-w-xs p-5 rounded-2xl bg-stone-100 border-none outline-none text-center font-bold text-lg" placeholder="Ваше имя">
-        <button onclick="saveName()" class="w-full max-w-xs bg-stone-900 text-white font-bold py-5 rounded-2xl mt-5 shadow-lg uppercase text-xs tracking-widest">Войти</button>
-    </div>
+        document.getElementById('status-bar').style.opacity = '1';
+        const fd = new FormData();
+        fd.append('image', file);
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        try {
+            const res = await fetch('https://api.imgbb.com/1/upload?key=735b440591505ed937f6d64b1d3dc16c', { method: 'POST', body: fd });
+            const d = await res.json();
+            if (d.success) {
+                await addDoc(collection(db, "photos"), {
+                    url: d.data.url,
+                    time: Date.now(),
+                    author: user
+                });
+            }
+        } catch (err) {
+            alert("Ошибка загрузки. Попробуйте еще раз.");
+        }
+        document.getElementById('status-bar').style.opacity = '0';
+        e.target.value = '';
+    });
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBbnhk5_ueRGpVizQ7z0PC82UONcOWNCWc",
-            authDomain: "wedding-global-gallery-b7876.firebaseapp.com",
-            projectId: "wedding-global-gallery-b7876",
-            storageBucket: "wedding-global-gallery-b7876.firebasestorage.app",
-            messagingSenderId: "591994059288",
-            appId: "1:591994059288:web:e7db71815514a96b7de16d"
-        };
+    // Проверка пользователя при старте
+    const user = localStorage.getItem('wedding_user');
+    if (!user) {
+        // Если имени нет, ПРИНУДИТЕЛЬНО показываем окно
+        setTimeout(() => {
+            document.getElementById('name-modal').classList.remove('hidden');
+        }, 500); 
+    } else {
+        load();
+    }
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(
+    // Вспомогательные функции
+    window.openPhoto = (id, url, auth) => {
+        document.getElementById('full-photo').src = url;
+        document.getElementById('viewer-name').innerText = auth;
+        document.getElementById('photo-viewer').classList.remove('hidden');
+    };
+    window.closePhoto = () => document.getElementById('photo-viewer').classList.add('hidden');
+</script>
