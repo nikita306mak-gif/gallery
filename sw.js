@@ -1,7 +1,7 @@
-const CACHE_NAME = 'wedding-v1';
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['./', './index.html', './manifest.json'])));
+  console.log('Service Worker: Installed');
 });
+
 self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((res) => res || fetch(e.request)));
+  // Здесь можно настроить кэширование, чтобы галерея работала оффлайн
 });
