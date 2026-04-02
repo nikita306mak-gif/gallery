@@ -6,19 +6,10 @@
     <title>Wedding Gram</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Кнопки админа скрыты по умолчанию */
         .admin-btn { display: none !important; }
         body.is-admin .admin-btn { display: flex !important; }
-        
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         body { -webkit-tap-highlight-color: transparent; }
-        
-        .like-pop { animation: like-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes like-pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.4); }
-            100% { transform: scale(1); }
-        }
     </style>
 </head>
 <body class="bg-white text-stone-900 h-screen flex flex-col font-sans">
@@ -40,7 +31,7 @@
     <footer class="bg-white border-t border-stone-200 p-2 pb-8 z-40 flex justify-around items-center">
         <label class="flex flex-col items-center gap-1 cursor-pointer p-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            <span class="text-[10px] font-medium uppercase text-stone-500">Галерея</span>
+            <span class="text-[10px] font-medium uppercase text-stone-500">Альбом</span>
             <input type="file" id="upload-gallery" class="hidden" accept="image/*">
         </label>
 
@@ -61,30 +52,22 @@
                  <div class="w-8 h-8 rounded-full bg-stone-700 flex items-center justify-center text-[10px] font-bold text-white uppercase" id="viewer-avatar">?</div>
                  <span class="font-bold text-sm text-white" id="viewer-name">Автор</span>
              </div>
-             <button id="admin-delete-fullscreen" class="admin-btn bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold uppercase" onclick="event.stopPropagation()">Удалить</button>
+             <button id="admin-delete-btn" class="admin-btn bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase" onclick="event.stopPropagation()">Удалить</button>
         </header>
-        <div class="flex-grow flex items-center justify-center p-2">
-            <img id="full-photo" src="" class="max-w-full max-h-[60vh] shadow-2xl" onclick="event.stopPropagation()">
+        <div class="flex-grow flex items-center justify-center p-4">
+            <img id="full-photo" src="" class="max-w-full max-h-[80vh] shadow-2xl" onclick="event.stopPropagation()">
         </div>
-        <footer class="p-6 bg-black" onclick="event.stopPropagation()">
-            <div class="flex items-center gap-4 mb-2">
-                <button id="like-btn-main" class="transition-colors">
-                    <svg id="heart-icon-main" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                </button>
-            </div>
-            <p class="text-white font-bold text-sm"><span id="likes-count-main">0</span> лайков</p>
-        </footer>
     </div>
 
     <div id="name-modal" class="fixed inset-0 bg-white z-50 hidden p-10 flex flex-col items-center justify-center text-center">
-        <h2 class="text-2xl font-bold mb-6 tracking-tight">Добро пожаловать в Wedding Gram!</h2>
-        <input type="text" id="user-name-input" class="w-full max-w-xs p-4 rounded-xl bg-stone-100 border border-stone-200 mb-4 outline-none focus:ring-2 ring-stone-900 text-center" placeholder="Как вас зовут?">
-        <button onclick="saveName()" class="w-full max-w-xs bg-stone-900 text-white font-bold py-4 rounded-xl active:scale-95 transition-all">Войти</button>
+        <h2 class="text-2xl font-bold mb-6">Wedding Gram</h2>
+        <input type="text" id="user-name-input" class="w-full max-w-xs p-4 rounded-xl bg-stone-100 border border-stone-200 mb-4 outline-none text-center" placeholder="Введите ваше имя">
+        <button onclick="saveName()" class="w-full max-w-xs bg-stone-900 text-white font-bold py-4 rounded-xl active:scale-95 transition-all">ВОЙТИ</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBbnhk5_ueRGpVizQ7z0PC82UONcOWNCWc",
@@ -97,51 +80,19 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        window.db = db;
 
-        const userId = localStorage.getItem('wedding_user_id') || 'id_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('wedding_user_id', userId);
-
-        window.openPhoto = (id, url, author, likes = []) => {
-            const viewer = document.getElementById('photo-viewer');
+        window.openPhoto = (id, url, author) => {
             document.getElementById('full-photo').src = url;
             document.getElementById('viewer-name').innerText = author;
             document.getElementById('viewer-avatar').innerText = author ? author[0] : '?';
-            document.getElementById('likes-count-main').innerText = likes.length;
-            
-            const heart = document.getElementById('heart-icon-main');
-            const isLiked = likes.includes(userId);
-            heart.setAttribute('fill', isLiked ? '#ef4444' : 'none');
-            heart.setAttribute('stroke', isLiked ? '#ef4444' : 'white');
-
-            document.getElementById('like-btn-main').onclick = () => toggleLike(id, likes);
-            
-            // Кнопка удаления в полноэкранном режиме
-            document.getElementById('admin-delete-fullscreen').onclick = (e) => {
-                e.stopPropagation();
-                removePhoto(id);
-            };
-
-            viewer.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            document.getElementById('photo-viewer').classList.remove('hidden');
+            document.getElementById('admin-delete-btn').onclick = () => removePhoto(id);
         };
 
-        window.closePhoto = () => {
-            document.getElementById('photo-viewer').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-        };
-
-        window.toggleLike = async (id, likes) => {
-            const photoRef = doc(db, "photos", id);
-            if (likes.includes(userId)) {
-                await updateDoc(photoRef, { likes: arrayRemove(userId) });
-            } else {
-                await updateDoc(photoRef, { likes: arrayUnion(userId) });
-            }
-        };
+        window.closePhoto = () => document.getElementById('photo-viewer').classList.add('hidden');
 
         window.removePhoto = async (id) => {
-            if (confirm("Вы уверены, что хотите удалить это фото навсегда?")) {
+            if (confirm("Удалить это фото?")) {
                 await deleteDoc(doc(db, "photos", id));
                 closePhoto();
             }
@@ -159,15 +110,8 @@
         };
 
         window.tryAdmin = () => {
-            const admins = ["Никита", "Анастасия", "Макар", "Admin"];
-            const current = localStorage.getItem('wedding_user_name');
-            if (admins.includes(current)) {
-                if (prompt("Введите пароль администратора:") === "1234") {
-                    document.body.classList.toggle('is-admin');
-                    alert("Режим администратора изменен!");
-                }
-            } else {
-                alert("У вас нет прав доступа к этой функции.");
+            if (prompt("Пароль администратора:") === "1234") {
+                document.body.classList.toggle('is-admin');
             }
         };
 
@@ -177,13 +121,10 @@
             gallery.innerHTML = '';
             snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
-                const likes = data.likes || [];
-                const id = docSnap.id;
-                
                 gallery.innerHTML += `
-                    <div class="relative aspect-square overflow-hidden bg-stone-100 border-white border-[0.5px]" onclick="openPhoto('${id}', '${data.url}', '${data.author}', ${JSON.stringify(likes)})">
+                    <div class="relative aspect-square overflow-hidden bg-stone-100 border-white border-[0.5px]" onclick="openPhoto('${docSnap.id}', '${data.url}', '${data.author}')">
                         <img src="${data.url}" class="w-full h-full object-cover">
-                        <button onclick="event.stopPropagation(); removePhoto('${id}')" class="admin-btn absolute top-1 right-1 bg-red-600/80 text-white px-1.5 py-0.5 rounded text-[8px] font-bold">X</button>
+                        <button onclick="event.stopPropagation(); removePhoto('${docSnap.id}')" class="admin-btn absolute top-1 right-1 bg-red-600 text-white px-1 py-0.5 rounded text-[8px] font-bold">X</button>
                     </div>`;
             });
         });
@@ -193,6 +134,7 @@
             if (!file) return;
             const status = document.getElementById('status');
             status.style.opacity = '1';
+
             const formData = new FormData();
             formData.append('image', file);
             try {
@@ -202,12 +144,11 @@
                     await addDoc(collection(db, "photos"), { 
                         url: data.data.url, 
                         time: Date.now(), 
-                        author: localStorage.getItem('wedding_user_name') || "Гость",
-                        likes: [] 
+                        author: localStorage.getItem('wedding_user_name') || "Гость"
                     });
-                    status.style.opacity = '0';
                 }
-            } catch (err) { alert("Ошибка загрузки. Попробуйте еще раз."); status.style.opacity = '0'; }
+            } catch (err) { alert("Ошибка сети"); }
+            status.style.opacity = '0';
         };
 
         document.getElementById('upload-camera').addEventListener('change', handleUpload);
