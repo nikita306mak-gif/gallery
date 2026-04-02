@@ -3,70 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Live Gallery</title>
+    <title>Wedding Gram</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .admin-btn { display: none !important; }
         body.is-admin .admin-btn { display: flex !important; }
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         body { -webkit-tap-highlight-color: transparent; }
-        .zoom-in { animation: zoom-in 0.3s ease-out; }
-        @keyframes zoom-in {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        .like-pop { animation: like-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes like-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
-<body class="bg-stone-100 text-stone-900 h-screen flex flex-col font-sans">
+<body class="bg-white text-stone-900 h-screen flex flex-col font-sans">
 
-    <header class="bg-white border-b border-stone-200 px-4 py-4 sticky top-0 z-40 shadow-sm">
-        <div class="flex items-center justify-center relative">
-            <h1 class="text-xl font-extrabold text-emerald-900 tracking-tight uppercase" onclick="tryAdmin()">
-                Никита + Анастасия
-            </h1>
+    <header class="bg-white border-b border-stone-200 px-4 py-3 sticky top-0 z-40 flex items-center justify-between">
+        <div class="w-10"></div>
+        <h1 class="text-xl font-bold tracking-tight text-stone-800" onclick="tryAdmin()">Никита + Анастасия</h1>
+        <div class="w-10 flex justify-end">
+            <div id="online-indicator" class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
         </div>
     </header>
 
-    <main class="flex-grow overflow-y-auto p-3">
-        <div id="status" class="text-[10px] text-stone-400 mb-4 tracking-[3px] opacity-0 text-center uppercase font-medium">Загрузка...</div>
-
-        <div id="gallery" class="grid grid-cols-2 gap-2 bg-white p-2 rounded-2xl shadow-inner border border-stone-200">
-            </div>
+    <main class="flex-grow overflow-y-auto">
+        <div id="status" class="text-[10px] text-stone-400 py-2 tracking-[3px] opacity-0 text-center uppercase font-bold">Загрузка...</div>
+        <div id="gallery" class="grid grid-cols-3 gap-0.5 border-t border-stone-200"></div>
     </main>
 
-    <footer class="bg-white border-t border-stone-200 p-4 pb-8 z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-  <div class="max-w-md mx-auto grid grid-cols-2 gap-4 mb-6">
-            
-            <label class="bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-xl font-bold cursor-pointer inline-flex items-center gap-2.5 transition-all shadow-md active:scale-95 uppercase text-xs w-full justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Камера
-                <input type="file" id="upload-camera" class="hidden" accept="image/*" capture="environment">
-            </label>
+    <footer class="bg-white border-t border-stone-200 p-2 pb-8 z-40 flex justify-around items-center">
+        <label class="flex flex-col items-center gap-1 cursor-pointer p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <span class="text-[10px] font-medium uppercase text-stone-500">Альбом</span>
+            <input type="file" id="upload-gallery" class="hidden" accept="image/*">
+        </label>
 
-            <label class="bg-stone-200 hover:bg-stone-300 text-stone-800 p-4 rounded-xl font-bold cursor-pointer inline-flex items-center gap-2 transition-all active:scale-95 text-xs w-full justify-center border border-stone-300">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                Галерея
-                <input type="file" id="upload-gallery" class="hidden" accept="image/*">
-            </label>
+        <label class="bg-stone-900 text-white p-3 rounded-full shadow-lg active:scale-90 transition-transform cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            <input type="file" id="upload-camera" class="hidden" accept="image/*" capture="environment">
+        </label>
 
-        </div>
-        <button class="absolute top-6 right-6 text-stone-400 hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        <button onclick="location.reload()" class="flex flex-col items-center gap-1 p-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <span class="text-[10px] font-medium uppercase text-stone-500">Обновить</span>
         </button>
-        <img id="full-photo" src="" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl zoom-in" onclick="event.stopPropagation()">
+    </footer>
+
+    <div id="photo-viewer" class="fixed inset-0 bg-black z-[100] hidden flex flex-col" onclick="closePhoto()">
+        <header class="p-4 flex items-center gap-3">
+             <div class="w-8 h-8 rounded-full bg-stone-700 flex items-center justify-center text-[10px] font-bold text-white uppercase" id="viewer-avatar">?</div>
+             <span class="font-bold text-sm text-white" id="viewer-name">Автор</span>
+        </header>
+        <div class="flex-grow flex items-center justify-center p-2">
+            <img id="full-photo" src="" class="max-w-full max-h-[70vh] shadow-2xl" onclick="event.stopPropagation()">
+        </div>
+        <footer class="p-6 bg-black" onclick="event.stopPropagation()">
+            <div class="flex items-center gap-4 mb-2">
+                <button id="like-btn-main" class="transition-colors">
+                    <svg id="heart-icon-main" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="white"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                </button>
+            </div>
+            <p class="text-white font-bold text-sm"><span id="likes-count-main">0</span> лайков</p>
+        </footer>
     </div>
 
-    <div id="name-modal" class="fixed inset-0 bg-stone-950/95 flex items-center justify-center z-50 hidden p-6 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-3xl w-full max-w-xs text-center border border-stone-200 shadow-2xl">
-            <h2 class="text-xl font-bold mb-6 text-emerald-950 uppercase tracking-tight">Добро пожаловать!</h2>
-            <input type="text" id="user-name-input" class="w-full p-4 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 mb-4 outline-none focus:border-emerald-500 text-center text-lg" placeholder="Ваше имя...">
-            <button onclick="saveName()" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl hover:bg-emerald-700 transition-all shadow-md active:scale-95 uppercase text-sm">Начать</button>
-        </div>
+    <div id="name-modal" class="fixed inset-0 bg-white z-50 hidden p-10 flex flex-col items-center justify-center text-center">
+        <h2 class="text-3xl font-bold mb-2">Wedding Gram</h2>
+        <input type="text" id="user-name-input" class="w-full max-w-xs p-4 rounded-xl bg-stone-100 border border-stone-200 mb-4 outline-none focus:ring-2 ring-stone-900 text-center" placeholder="Ваше имя">
+        <button onclick="saveName()" class="w-full max-w-xs bg-stone-900 text-white font-bold py-4 rounded-xl active:scale-95 transition-all">Войти</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBbnhk5_ueRGpVizQ7z0PC82UONcOWNCWc",
@@ -81,16 +92,32 @@
         const db = getFirestore(app);
         window.db = db;
 
-        window.openPhoto = (url) => {
+        const userId = localStorage.getItem('wedding_user_id') || 'id_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('wedding_user_id', userId);
+
+        window.openPhoto = (id, url, author, likes = []) => {
             const viewer = document.getElementById('photo-viewer');
             document.getElementById('full-photo').src = url;
+            document.getElementById('viewer-name').innerText = author;
+            document.getElementById('viewer-avatar').innerText = author[0];
+            document.getElementById('likes-count-main').innerText = likes.length;
+            const heart = document.getElementById('heart-icon-main');
+            const isLiked = likes.includes(userId);
+            heart.setAttribute('fill', isLiked ? '#ef4444' : 'none');
+            heart.setAttribute('stroke', isLiked ? '#ef4444' : 'white');
+            document.getElementById('like-btn-main').onclick = () => toggleLike(id, likes);
             viewer.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         };
 
-        window.closePhoto = () => {
-            document.getElementById('photo-viewer').classList.add('hidden');
-            document.body.style.overflow = 'auto';
+        window.closePhoto = () => document.getElementById('photo-viewer').classList.add('hidden');
+
+        window.toggleLike = async (id, likes) => {
+            const photoRef = doc(db, "photos", id);
+            if (likes.includes(userId)) {
+                await updateDoc(photoRef, { likes: arrayRemove(userId) });
+            } else {
+                await updateDoc(photoRef, { likes: arrayUnion(userId) });
+            }
         };
 
         window.userName = localStorage.getItem('wedding_user_name');
@@ -105,15 +132,9 @@
         };
 
         window.tryAdmin = () => {
-            const admins = ["Макар", "Никита", "Анастасия", "Admin"];
-            if (admins.includes(localStorage.getItem('wedding_user_name'))) {
+            if (["Никита", "Анастасия"].includes(localStorage.getItem('wedding_user_name'))) {
                 if (prompt("Пароль:") === "1234") document.body.classList.toggle('is-admin');
             }
-        };
-
-        window.removePhoto = async (id, event) => {
-            event.stopPropagation();
-            if (confirm("Удалить это фото?")) await deleteDoc(doc(window.db, "photos", id));
         };
 
         const q = query(collection(db, "photos"), orderBy("time", "desc"));
@@ -122,15 +143,11 @@
             gallery.innerHTML = '';
             snapshot.forEach((doc) => {
                 const data = doc.data();
+                const likes = data.likes || [];
                 gallery.innerHTML += `
-                    <div class="relative bg-stone-50 aspect-square overflow-hidden rounded-lg" onclick="openPhoto('${data.url}')">
+                    <div class="relative aspect-square overflow-hidden bg-stone-100 border-white border" onclick="openPhoto('${doc.id}', '${data.url}', '${data.author}', ${JSON.stringify(likes)})">
                         <img src="${data.url}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-white/80 rounded backdrop-blur-sm">
-                            <span class="text-stone-900 text-[9px] font-bold uppercase">${data.author || 'Гость'}</span>
-                        </div>
-                        <button onclick="removePhoto('${doc.id}', event)" class="admin-btn absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
+                        <button onclick="event.stopPropagation(); deleteDoc(doc(window.db, 'photos', '${doc.id}'))" class="admin-btn absolute top-1 right-1 bg-red-600 text-white p-1 rounded text-[8px]">УДАЛИТЬ</button>
                     </div>`;
             });
         });
@@ -138,18 +155,22 @@
         const handleUpload = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            const status = document.getElementById('status');
-            status.style.opacity = '1';
+            document.getElementById('status').style.opacity = '1';
             const formData = new FormData();
             formData.append('image', file);
             try {
                 const res = await fetch('https://api.imgbb.com/1/upload?key=5075a2f2bf9edb2a94bc4dd69e8e025e', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    await addDoc(collection(db, "photos"), { url: data.data.url, time: Date.now(), author: localStorage.getItem('wedding_user_name') || "Гость" });
-                    status.style.opacity = '0';
+                    await addDoc(collection(db, "photos"), { 
+                        url: data.data.url, 
+                        time: Date.now(), 
+                        author: localStorage.getItem('wedding_user_name') || "Гость",
+                        likes: [] 
+                    });
+                    document.getElementById('status').style.opacity = '0';
                 }
-            } catch (err) { status.innerText = "Ошибка сети"; }
+            } catch (err) { alert("Ошибка загрузки"); }
         };
 
         document.getElementById('upload-camera').addEventListener('change', handleUpload);
