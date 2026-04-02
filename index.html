@@ -3,61 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GIF Gallery</title>
+    <title>Gallery App</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Gallery">
+    <meta name="apple-mobile-web-app-title" content="Nikita Gallery">
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <style>
         :root {
-            --bg-color: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --text-color: #ffffff;
+            --bg-color: #000000;
+            --card-bg: #111111;
+            --accent-color: #ffffff;
+            --text-secondary: #888888;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
+            color: white;
             margin: 0;
-            padding: 20px;
+            padding: env(safe-area-inset-top) 15px 20px 15px; /* Учитываем челку iPhone */
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        h1 {
-            font-weight: 300;
-            letter-spacing: 2px;
-            margin-bottom: 30px;
+        /* Обновленный заголовок с именем профиля */
+        .profile-header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin: 0;
+            text-transform: lowercase; /* Стиль под соцсети */
+        }
+
+        .profile-status {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 5px;
         }
 
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr); /* Сетка как в Instagram */
+            gap: 2px;
             width: 100%;
-            max-width: 1200px;
+            max-width: 500px;
         }
 
         .gif-card {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
             aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .gif-card:active {
-            transform: scale(0.95);
+            overflow: hidden;
+            position: relative;
         }
 
         .gif-card img {
@@ -66,23 +72,25 @@
             object-fit: cover;
         }
 
-        /* Кнопка установки (появится, если браузер позволит) */
         #install-btn {
             display: none;
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            background: #fff;
-            color: #000;
+            margin: 10px 0 20px 0;
+            padding: 8px 16px;
+            background: var(--accent-color);
+            color: black;
             border: none;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
-    <h1>MY GALLERY</h1>
+    <div class="profile-header">
+        <p class="profile-name" id="user-name">nikita306mak</p>
+        <p class="profile-status">Галерея GIF</p>
+    </div>
     
     <button id="install-btn">Установить приложение</button>
 
@@ -90,36 +98,42 @@
         <div class="gif-card">
             <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKMGpxxXG9TJCDe/giphy.gif" alt="GIF">
         </div>
+        <div class="gif-card">
+            <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0HlUxu9fMQx0kX3G/giphy.gif" alt="GIF">
         </div>
+        <div class="gif-card">
+            <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueGZueCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKVUn7iM8FMEU24/giphy.gif" alt="GIF">
+        </div>
+    </div>
 
     <script>
-        // 1. Регистрация Service Worker для PWA
+        // Автоматическое определение имени из URL GitHub Pages
+        const path = window.location.hostname;
+        if (path.includes('github.io')) {
+            const username = path.split('.')[0];
+            document.getElementById('user-name').textContent = username;
+        }
+
+        // PWA Регистрация
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW зарегистрирован!', reg))
-                    .catch(err => console.log('Ошибка SW:', err));
+                navigator.serviceWorker.register('sw.js').catch(() => {});
             });
         }
 
-        // 2. Логика кнопки установки (для Android/Chrome)
+        // Кнопка установки
         let deferredPrompt;
-        const installBtn = document.getElementById('install-btn');
-
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.style.display = 'block';
+            document.getElementById('install-btn').style.display = 'block';
         });
 
-        installBtn.addEventListener('click', async () => {
+        document.getElementById('install-btn').addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    installBtn.style.display = 'none';
-                }
                 deferredPrompt = null;
+                document.getElementById('install-btn').style.display = 'none';
             }
         });
     </script>
