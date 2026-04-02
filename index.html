@@ -1,103 +1,160 @@
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wedding Gallery</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], calligraphy: ['Great Vibes', 'cursive'] } } }
+        }
+    </script>
+    <style>
+        .admin-btn { display: none !important; }
+        body.is-admin .admin-btn { display: flex !important; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; background-color: #fcfcfc; }
+        .active-tab { color: #1c1917 !important; font-weight: 800; border-top: 2px solid #1c1917; }
+        .gallery-container { padding-bottom: 140px; }
+        /* Защита от скачивания */
+        img { pointer-events: none; -webkit-user-drag: none; }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body class="h-screen flex flex-col font-sans">
 
-    // Твой конфиг из Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyBbnhk5_ueRGpVizQ7z0PC82UONcOWNCWc",
-        authDomain: "wedding-global-gallery-b7876.firebaseapp.com",
-        projectId: "wedding-global-gallery-b7876",
-        storageBucket: "wedding-global-gallery-b7876.firebasestorage.app",
-        messagingSenderId: "591994059288",
-        appId: "1:591994059288:web:e7db71815514a96b7de16d"
-    };
+    <header class="bg-white/90 backdrop-blur-md border-b border-stone-200 px-5 py-4 sticky top-0 z-40 flex items-center justify-between">
+        <div class="w-12 text-[9px] font-black text-stone-400 uppercase tracking-tighter" id="filter-status">Лента</div>
+        <h1 class="text-3xl font-calligraphy text-stone-800 cursor-pointer" onclick="tryAdmin()">Никита + Анастасия</h1>
+        <div class="w-12 flex justify-end">
+            <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
+        </div>
+    </header>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    let unsub = null;
-    let filterMy = false;
-    const statusBar = document.getElementById('status-bar');
+    <main class="flex-grow overflow-y-auto gallery-container">
+        <div id="status-bar" class="text-[10px] text-stone-500 py-2 tracking-[3px] opacity-0 text-center uppercase font-bold transition-opacity">Загрузка...</div>
+        <div id="gallery" class="grid grid-cols-3 gap-0.5 p-0.5"></div>
+        <div id="empty-msg" class="hidden flex flex-col items-center justify-center p-20 text-stone-400 text-center italic">Галерея пуста</div>
+    </main>
 
-    window.saveName = () => {
-        const val = document.getElementById('user-name-input').value.trim();
-        if (val.length > 1) { localStorage.setItem('wedding_user', val); location.reload(); }
-    };
+    <footer class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-stone-200 px-2 pb-8 pt-3 z-40 flex justify-around items-center">
+        <button id="nav-profile" onclick="setFilter(true)" class="flex flex-col items-center gap-1 p-2 text-stone-400 w-20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            <span class="text-[10px] font-bold uppercase">Мои</span>
+        </button>
 
-    window.setFilter = (my) => {
-        filterMy = my;
-        document.getElementById('nav-profile').classList.toggle('active-tab', my);
-        document.getElementById('nav-all').classList.toggle('active-tab', !my);
-        document.getElementById('filter-status').innerText = my ? "Мои" : "Лента";
-        load();
-    };
+        <label class="bg-stone-900 text-white p-5 rounded-full shadow-2xl active:scale-90 transition-transform cursor-pointer -mt-12 border-[6px] border-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16m8-8H4" /></svg>
+            <input type="file" id="upload-input" class="hidden" accept="image/*">
+        </label>
 
-    const load = () => {
-        if (unsub) unsub();
-        const gallery = document.getElementById('gallery');
-        const currentUser = localStorage.getItem('wedding_user');
-        
-        let q = query(collection(db, "photos"), orderBy("time", "desc"));
-        if (filterMy && currentUser) q = query(collection(db, "photos"), where("author", "==", currentUser), orderBy("time", "desc"));
+        <button id="nav-all" onclick="setFilter(false)" class="flex flex-col items-center gap-1 p-2 text-stone-400 active-tab w-20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            <span class="text-[10px] font-bold uppercase">Лента</span>
+        </button>
+    </footer>
 
-        unsub = onSnapshot(q, (snap) => {
-            gallery.innerHTML = '';
-            document.getElementById('empty-msg').classList.toggle('hidden', !snap.empty);
+    <div id="photo-viewer" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col" onclick="closePhoto()">
+        <header class="p-5 flex items-center justify-between text-white">
+             <span class="font-bold text-sm" id="viewer-name">Автор</span>
+             <button id="admin-delete-btn" class="admin-btn bg-red-600 px-4 py-2 rounded-full text-[10px] font-bold uppercase">Удалить</button>
+        </header>
+        <div class="flex-grow flex items-center justify-center p-4">
+            <img id="full-photo" src="" class="max-w-full max-h-[80vh] rounded shadow-2xl">
+        </div>
+    </div>
+
+    <div id="name-modal" class="fixed inset-0 bg-white z-[200] hidden p-10 flex flex-col items-center justify-center text-center">
+        <h2 class="text-5xl font-calligraphy text-stone-800 mb-8">Wedding Gram</h2>
+        <input type="text" id="user-name-input" class="w-full max-w-xs p-5 rounded-2xl bg-stone-100 outline-none text-center font-bold text-lg" placeholder="Ваше имя">
+        <button onclick="saveName()" class="w-full max-w-xs bg-stone-900 text-white font-bold py-5 rounded-2xl mt-5 uppercase text-xs tracking-widest">Войти</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbnhk5_ueRGpVizQ7z0PC82UONcOWNCWc",
+            authDomain: "wedding-global-gallery-b7876.firebaseapp.com",
+            projectId: "wedding-global-gallery-b7876",
+            storageBucket: "wedding-global-gallery-b7876.firebasestorage.app",
+            messagingSenderId: "591994059288",
+            appId: "1:591994059288:web:e7db71815514a96b7de16d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let unsub = null;
+        let filterMy = false;
+
+        window.saveName = () => {
+            const val = document.getElementById('user-name-input').value.trim();
+            if (val.length > 1) { localStorage.setItem('wedding_user', val); location.reload(); }
+        };
+
+        window.setFilter = (my) => {
+            filterMy = my;
+            document.getElementById('nav-profile').classList.toggle('active-tab', my);
+            document.getElementById('nav-all').classList.toggle('active-tab', !my);
+            document.getElementById('filter-status').innerText = my ? "Мои" : "Лента";
+            load();
+        };
+
+        const load = () => {
+            if (unsub) unsub();
+            const gallery = document.getElementById('gallery');
+            const currentUser = localStorage.getItem('wedding_user');
             
-            snap.forEach(d => {
-                const data = d.data();
-                const author = data.author || "Гость";
-                
-                // Исправленная логика выделения твоих фото
-                const isMyPhoto = (author === currentUser);
-                const borderStyle = (filterMy && isMyPhoto) ? 'border-[6px] border-stone-900 shadow-xl scale-[0.98]' : 'border-transparent';
+            let q = query(collection(db, "photos"), orderBy("time", "desc"));
+            if (filterMy && currentUser) q = query(collection(db, "photos"), where("author", "==", currentUser), orderBy("time", "desc"));
 
-                gallery.innerHTML += `
-                    <div class="relative bg-white p-1 transition-all duration-300 ${borderStyle}" onclick="openPhoto('${d.id}', '${data.url}', '${author}')">
-                        <div class="aspect-square overflow-hidden bg-stone-100">
-                            <img src="${data.url}" class="w-full h-full object-cover">
-                        </div>
-                        <p class="text-[11px] text-center font-calligraphy py-1.5 text-stone-500 truncate">${author}</p>
-                        <button onclick="event.stopPropagation(); removePhoto('${d.id}')" class="admin-btn absolute top-2 right-2 bg-red-600 text-white w-5 h-5 flex items-center justify-center rounded-full text-[10px]">✕</button>
-                    </div>`;
-            });
-        });
-    };
-
-    window.openPhoto = (id, url, auth) => {
-        document.getElementById('full-photo').src = url;
-        document.getElementById('viewer-name').innerText = auth;
-        document.getElementById('photo-viewer').classList.remove('hidden');
-        document.getElementById('admin-delete-btn').onclick = () => removePhoto(id);
-    };
-
-    window.closePhoto = () => document.getElementById('photo-viewer').classList.add('hidden');
-    window.removePhoto = async (id) => { if (confirm("Удалить фото?")) await deleteDoc(doc(db, "photos", id)); };
-    window.tryAdmin = () => { if (prompt("Пароль:") === "1234") document.body.classList.toggle('is-admin'); };
-
-    document.getElementById('upload-input').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        statusBar.style.opacity = '1'; statusBar.innerText = "ЗАГРУЗКА...";
-        const fd = new FormData(); fd.append('image', file);
-        try {
-            const res = await fetch('https://api.imgbb.com/1/upload?key=735b440591505ed937f6d64b1d3dc16c', { method: 'POST', body: fd });
-            const d = await res.json();
-            if (d.success) {
-                await addDoc(collection(db, "photos"), { 
-                    url: d.data.url, 
-                    time: Date.now(), 
-                    author: localStorage.getItem('wedding_user') || "Гость"
+            unsub = onSnapshot(q, (snap) => {
+                gallery.innerHTML = '';
+                document.getElementById('empty-msg').classList.toggle('hidden', !snap.empty);
+                snap.forEach(d => {
+                    const data = d.data();
+                    const isMy = (data.author === currentUser);
+                    const style = (filterMy && isMy) ? 'border-[6px] border-stone-900 shadow-xl' : 'border-transparent';
+                    gallery.innerHTML += `
+                        <div class="relative bg-white p-1 transition-all ${style}" onclick="openPhoto('${d.id}', '${data.url}', '${data.author}')">
+                            <div class="aspect-square overflow-hidden"><img src="${data.url}" class="w-full h-full object-cover"></div>
+                            <p class="text-[10px] text-center font-calligraphy py-1 text-stone-500 truncate">${data.author || 'Гость'}</p>
+                            <button onclick="event.stopPropagation(); removePhoto('${d.id}')" class="admin-btn absolute top-2 right-2 bg-red-600 text-white w-5 h-5 flex items-center justify-center rounded-full text-[10px]">✕</button>
+                        </div>`;
                 });
-            }
-        } catch (err) { alert("Ошибка загрузки"); }
-        statusBar.style.opacity = '0';
-        e.target.value = '';
-    });
+            });
+        };
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
-    }
+        window.openPhoto = (id, url, auth) => {
+            document.getElementById('full-photo').src = url;
+            document.getElementById('viewer-name').innerText = auth;
+            document.getElementById('photo-viewer').classList.remove('hidden');
+            document.getElementById('admin-delete-btn').onclick = (e) => { e.stopPropagation(); removePhoto(id); };
+        };
 
-    const user = localStorage.getItem('wedding_user');
-    if (!user) document.getElementById('name-modal').classList.remove('hidden'); else load();
-</script>
+        window.closePhoto = () => document.getElementById('photo-viewer').classList.add('hidden');
+        window.removePhoto = async (id) => { if (confirm("Удалить?")) await deleteDoc(doc(db, "photos", id)); };
+        window.tryAdmin = () => { if (prompt("Пароль:") === "1234") document.body.classList.toggle('is-admin'); };
+
+        document.getElementById('upload-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('status-bar').style.opacity = '1';
+            const fd = new FormData(); fd.append('image', file);
+            try {
+                const res = await fetch('https://api.imgbb.com/1/upload?key=735b440591505ed937f6d64b1d3dc16c', { method: 'POST', body: fd });
+                const d = await res.json();
+                if (d.success) await addDoc(collection(db, "photos"), { url: d.data.url, time: Date.now(), author: localStorage.getItem('wedding_user') });
+            } catch (err) { alert("Ошибка"); }
+            document.getElementById('status-bar').style.opacity = '0';
+        });
+
+        const user = localStorage.getItem('wedding_user');
+        if (!user) document.getElementById('name-modal').classList.remove('hidden'); else load();
+    </script>
+</body>
+</html>
